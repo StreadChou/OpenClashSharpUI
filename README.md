@@ -2,186 +2,147 @@
 
 <img src="https://raw.githubusercontent.com/vernesong/OpenClash/dev/img/logo.png" alt="OpenClash" width="160" />
 
-# OpenClash
+# OpenClash SharpUI
 
-一个可运行在 OpenWrt 上的 [Mihomo (Clash Meta)](https://github.com/MetaCubeX/mihomo) 客户端
+基于 OpenClash 的 UI 精简与交互改造项目
 
-[![License](https://img.shields.io/github/license/vernesong/OpenClash?style=flat-square&color=brightgreen)](LICENSE)
-[![Release](https://img.shields.io/github/v/release/vernesong/OpenClash?style=flat-square)](https://github.com/vernesong/OpenClash/releases)
-[![Downloads](https://img.shields.io/github/downloads/vernesong/OpenClash/total?style=flat-square)](https://github.com/vernesong/OpenClash/releases)
-[![OpenWrt](https://img.shields.io/badge/OpenWrt-18.06%2B-00B5E2?style=flat-square&logo=openwrt&logoColor=white)](https://openwrt.org/)
-[![Telegram](https://img.shields.io/badge/Telegram-OpenClash%20Group-2CA5E0?style=flat-square&logo=telegram&logoColor=white)](https://t.me/openclash_group)
+[![License](https://img.shields.io/github/license/StreadChou/OpenClashSharpUI?style=flat-square&color=brightgreen)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/StreadChou/OpenClashSharpUI?style=flat-square)](https://github.com/StreadChou/OpenClashSharpUI/releases)
+[![Upstream](https://img.shields.io/badge/Upstream-OpenClash-blue?style=flat-square)](https://github.com/vernesong/OpenClash)
 
 </div>
 
-## 简介
+## 项目定位
 
-OpenClash 是一个面向 OpenWrt 的 LuCI 插件，用于管理 [Mihomo](https://github.com/MetaCubeX/mihomo)（原 Clash Meta）内核，兼容 Shadowsocks、ShadowsocksR、VMess、VLESS、Trojan、Snell、TUIC、Hysteria 等主流协议，通过灵活的规则配置实现按需分流与透明代理。
+**OpenClash SharpUI 是 [vernesong/OpenClash](https://github.com/vernesong/OpenClash) 的非官方 fork。** 上游是运行于 OpenWrt 的 LuCI 插件，负责管理 Mihomo（Clash Meta）内核。本项目计划对其 UI 进行大规模精简和重构，重点改善信息组织、操作流程与视觉体验，同时保持主要功能、配置格式和运行逻辑，并持续合并上游更新。
 
-## 功能特性
+本项目的终极目标，是希望 OpenClash 作者更加重视 UI 和日常使用体验。我们希望通过实际改造展示更简洁的界面与交互方案，并为上游提供可参考的设计和实现。
 
-| 模块 | 说明 |
-|------|------|
-| 内核 | 内置 Mihomo（Meta）与 Smart 智能内核，支持在线更新与切换 |
-| 运行模式 | redir-host / fake-ip 与混合模式、TUN 模式，兼容 iptables 与 nftables |
-| 订阅管理 | 多订阅并存，支持 Subconverter 在线转换、自定义 User-Agent 与请求头 |
-| 配置管理 | 多配置文件一键切换、在线编辑、备份/恢复、Age 加密 |
-| 访问控制 | 黑白名单、自定义防火墙规则 |
-| 流媒体 | Netflix / Disney+ / HBO 等自动选线 |
-| 覆写设置 | 模块化覆写 YAML，方便配置文件定制 |
+**如果后续 OpenClash 完成 UI 改进，维护者确认可以回归上游，本项目将彻底关闭：停止开发、维护、版本发布和问题受理，并引导用户回到原始项目。** 届时会提供回归上游的说明。本项目不以长期维持独立分支为目标。
+
+这里描述的是项目方向与维护约定，不代表所有 UI 改造已经完成。SharpUI 的问题请提交到[本仓库 Issues](https://github.com/StreadChou/OpenClashSharpUI/issues)；确认是上游问题后，再提供可在原版复现的信息。
 
 ## 目录
 
-- [简介](#简介)
-- [功能特性](#功能特性)
-- [快速开始](#快速开始)
-- [使用手册](#使用手册)
-- [下载](#下载)
-- [依赖](#依赖)
-- [源码编译](#源码编译)
+- [项目定位](#项目定位)
+- [改造原则](#改造原则)
+- [上游基线](#上游基线)
+- [版本规则](#版本规则)
+- [下载与安装](#下载与安装)
+- [使用手册与依赖](#使用手册与依赖)
+- [源码构建](#源码构建)
+- [开发与上游同步](#开发与上游同步)
 - [致谢](#致谢)
-- [请作者喝杯咖啡](#请作者喝杯咖啡)
+- [支持上游作者](#支持上游作者)
 - [许可证](#许可证)
 
-## 快速开始
+## 改造原则
 
-### 网页安装
+- 优先精简概览、配置与订阅、日志与诊断等日常操作，减少默认展示的复杂选项。
+- 复用原有操作接口与业务能力，保持配置、校验、保存和应用行为；未展示的高级配置应完整保留。
+- 新 UI 尽量使用独立目录、资源命名空间和接口适配层，保留原界面或高级入口，逐步迁移。
+- 控制与上游的差异，避免无关格式化、文件重排以及重复维护后端逻辑，便于持续合并。
+- 保留上游署名、许可证与致谢，欢迎将有价值的改进反馈给上游。
 
-1. 从 [Release 页面](https://github.com/vernesong/OpenClash/releases) 下载对应架构的安装包（`*.ipk` 或 `*.apk`）；
-2. 登录 OpenWrt 的 LuCI 后台，前往 **系统 → 软件包** 上传并安装；
-3. 刷新或者重新登录页面，在 **服务 → OpenClash** 中导入订阅或上传配置文件并启动。
+## 上游基线
 
-### 命令行安装
+| 项目 | 当前记录 |
+| --- | --- |
+| 上游仓库 | [vernesong/OpenClash](https://github.com/vernesong/OpenClash) |
+| 上游版本 / 标签 | `0.48.002` / `v0.48.002` |
+| 上游提交 | [`e553e82e01c697aefbe1555261a503f425e00ccd`](https://github.com/vernesong/OpenClash/commit/e553e82e01c697aefbe1555261a503f425e00ccd) |
+| 本项目仓库 | [StreadChou/OpenClashSharpUI](https://github.com/StreadChou/OpenClashSharpUI) |
 
-安装依赖并下载最新版（iptables 防火墙）：
+这是当前代码所记录的同步基线，不表示它始终是上游最新版本，也不表示本项目已经发布了对应安装包。每次合并新的上游版本时更新此表。
 
-```shell
-# opkg 系统（ipk）
-opkg update
-opkg install bash iptables dnsmasq-full curl ca-bundle ipset ip-full iptables-mod-tproxy iptables-mod-extra ruby ruby-yaml kmod-tun kmod-inet-diag unzip luci-compat luci luci-base
-curl -L --retry 2 https://api.github.com/repos/vernesong/OpenClash/releases/latest -o /tmp/openclash_version
-[ -f "/tmp/openclash_version" ] && download_url=$(cat /tmp/openclash_version | jsonfilter -e '@.assets[*].browser_download_url' | grep '\.ipk$') && curl -L --retry 2 "$download_url" -o /tmp/openclash.ipk || echo "OpenClash last version get failed"
-[ -f "/tmp/openclash.ipk" ] && opkg install /tmp/openclash.ipk || echo "OpenClash download failed"
+## 版本规则
 
-# apk 系统（apk）
-apk update
-apk add bash iptables dnsmasq-full curl ca-bundle ipset ip-full iptables-mod-tproxy iptables-mod-extra ruby ruby-yaml kmod-tun kmod-inet-diag unzip luci-compat luci luci-base
-curl -L --retry 2 https://api.github.com/repos/vernesong/OpenClash/releases/latest -o /tmp/openclash_version
-[ -f "/tmp/openclash_version" ] && download_url=$(cat /tmp/openclash_version | jsonfilter -e '@.assets[*].browser_download_url' | grep '\.apk$') && curl -L --retry 2 "$download_url" -o /tmp/openclash.apk || echo "OpenClash last version get failed"
-[ -f "/tmp/openclash.apk" ] && apk add -q --force-overwrite --clean-protected --allow-untrusted /tmp/openclash.apk || echo "OpenClash download failed"
+本项目的对外版本采用 **上游版本 + SharpUI 修订号**，明确展示与原始项目的对应关系。
+
+| 场景 | 本项目显示版本 | GitHub 发布标签 |
+| --- | --- | --- |
+| 同步上游 `0.48.002`，形成对应的 SharpUI 基线发布 | `0.48.002` | `sharpui-v0.48.002` |
+| 在此基础上首次独立修复 BUG 或发布 UI 改进 | `0.48.002-001` | `sharpui-v0.48.002-001` |
+| 在同一上游基线上再次独立发布 | `0.48.002-002` | `sharpui-v0.48.002-002` |
+| 合并上游 `0.48.003`，保留 SharpUI 改造并形成新的基线发布 | `0.48.003` | `sharpui-v0.48.003` |
+| 新基线上的首次独立修订 | `0.48.003-001` | `sharpui-v0.48.003-001` |
+
+- 无后缀表示该上游版本对应的 SharpUI 同步发布，包含已有的 UI 改造，不代表与原版源码完全一致。
+- 后缀从 `001` 开始，按实际发布递增，至少保留三位；超过 `999` 后继续使用 `1000`。普通开发提交不自动增加版本。
+- 切换到新的上游版本后，修订号重新开始；若继续维护旧基线，则继续使用其已有修订序列。已发布版本和标签不覆盖、不复用。
+- 每个 Release 应注明上游版本、完整提交 SHA、本项目修订内容、验证结果及已知限制。
+
+**GitHub 可以使用这种标签和 Release 名称。** 我们使用 `sharpui-v` 标签前缀区分 fork 发布，避免与已继承的上游 `v0.48.002` 等标签混淆；界面和 Release 名称中的版本仍为 `0.48.002-001`。标签与发布的关系参见 [GitHub 官方说明](https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository)。
+
+这是本项目的版本约定，**不是严格 SemVer**：`002` 和 `001` 带有前导零，且本项目将 `-001` 定义为正式修订，不能套用 SemVer 的预发布排序规则。版本比较应分别按十进制解析上游各数字段及修订号，缺省修订号视为 `0`：
+
+```text
+0.48.002 < 0.48.002-001 < 0.48.002-002 < 0.48.003
 ```
 
-安装依赖并下载最新版（nftables 防火墙，Firewall4）：
+稳定或预发布状态按实际发布性质设置，不由 `-001` 后缀决定。发布时显式指定是否设为 Latest，不依赖 GitHub 的自动语义版本排序；旧基线的维护版本不替代较新基线的稳定版本成为 Latest。有关严格 SemVer 的限制，参见 [SemVer 规范](https://semver.org/lang/zh-CN/)。
 
-```shell
-# opkg 系统（ipk）
-opkg update
-opkg install bash dnsmasq-full curl ca-bundle ip-full ruby ruby-yaml kmod-tun kmod-inet-diag unzip kmod-nft-tproxy luci-compat luci luci-base
-curl -L --retry 2 https://api.github.com/repos/vernesong/OpenClash/releases/latest -o /tmp/openclash_version
-[ -f "/tmp/openclash_version" ] && download_url=$(cat /tmp/openclash_version | jsonfilter -e '@.assets[*].browser_download_url' | grep '\.ipk$') && curl -L --retry 2 "$download_url" -o /tmp/openclash.ipk || echo "OpenClash last version get failed"
-[ -f "/tmp/openclash.ipk" ] && opkg install /tmp/openclash.ipk || echo "OpenClash download failed"
+### 安装包版本与发布状态
 
-# apk 系统（apk）
-apk update
-apk add bash dnsmasq-full curl ca-bundle ip-full ruby ruby-yaml kmod-tun kmod-inet-diag unzip kmod-nft-tproxy luci-compat luci luci-base
-curl -L --retry 2 https://api.github.com/repos/vernesong/OpenClash/releases/latest -o /tmp/openclash_version
-[ -f "/tmp/openclash_version" ] && download_url=$(cat /tmp/openclash_version | jsonfilter -e '@.assets[*].browser_download_url' | grep '\.apk$') && curl -L --retry 2 "$download_url" -o /tmp/openclash.apk || echo "OpenClash last version get failed"
-[ -f "/tmp/openclash.apk" ] && apk add -q --force-overwrite --clean-protected --allow-untrusted /tmp/openclash.apk || echo "OpenClash download failed"
+GitHub 标签、显示版本和安装包元数据是不同层次。IPK/APK 的版本格式、升级排序、下载文件名，以及 OpenClash 内置更新器都需要单独适配与验证；不能仅将 `PKG_VERSION` 改为 `0.48.002-001` 就认为发布链路已经兼容。
+
+**当前仓库仍保留上游的打包与插件更新逻辑，尚未完成 SharpUI 修订号和更新来源的完整适配。** 上述规则是后续发布约定，实际安装包以本项目 Releases 为准。原插件更新来源仍指向上游，直接使用原插件更新功能可能覆盖 SharpUI 改动。
+
+后续打包将分别维护上游版本与 fork 修订，按 SDK 支持的包版本规则映射，并在 Release 中注明对应关系。每次 UI 发布也需要更新静态资源缓存标识，确保用户能够加载修订后的界面。
+
+## 下载与安装
+
+请以[本项目 Releases](https://github.com/StreadChou/OpenClashSharpUI/releases) 中实际发布的资产及说明为准。若尚无 SharpUI 安装包，请使用本仓库源码构建；上游安装包不会包含本项目的 UI 改造。
+
+发布安装包后，在 OpenWrt 的 **系统 → 软件包** 中选择与系统包管理器匹配的文件进行安装：
+
+| 文件类型 | 对应系统 |
+| --- | --- |
+| `*.ipk` | 使用 opkg 的系统 |
+| `*.apk` | 使用 apk 的系统 |
+
+升级、从原版迁入和回归上游前，请备份配置并阅读对应版本的迁移说明。不要把上游下载脚本或原插件更新通道当作 SharpUI 的发布来源。
+
+## 使用手册与依赖
+
+代理配置与功能说明可参考[上游使用手册](https://github.com/vernesong/OpenClash/blob/dev/.github/skills/openclash-user-guide/SKILL.md)。该文档随上游变化，UI 位置和选项可能与当前 SharpUI 不同。
+
+运行依赖继续沿用所同步上游版本的要求，包括 LuCI、luci-compat、dnsmasq-full、bash、curl、Ruby/YAML 及相应网络组件；iptables / nftables、opkg / apk 的具体依赖按目标 OpenWrt 环境选择，以[包 Makefile](luci-app-openclash/Makefile)和上游对应版本说明为准。
+
+## 源码构建
+
+获取本 fork 的源码：
+
+```sh
+git clone --branch master https://github.com/StreadChou/OpenClashSharpUI.git
+cd OpenClashSharpUI
 ```
 
-> 首次使用需要下载内核，请提前确认网络环境
+准备与目标 OpenWrt 版本和平台匹配的 SDK，将本仓库的 `luci-app-openclash` 目录复制到 SDK 的 `package/luci-app-openclash`。准备所需依赖及 `po2lmo` 等构建工具后，在 **SDK 根目录**执行：
 
-## 使用手册
-
-- [Wiki](https://github.com/vernesong/OpenClash/blob/dev/.github/skills/openclash-user-guide/SKILL.md)
-
-## 下载
-
-最新版本请前往 [Releases](https://github.com/vernesong/OpenClash/releases/latest) 页面，按需选择对应的安装包：
-
-| 安装包 | 说明 |
-|--------|------|
-| `luci-app-openclash_*.ipk` | opkg 安装包 |
-| `luci-app-openclash-*.apk` | apk 安装包 |
-
-> 历史版本请前往 [全部 Releases](https://github.com/vernesong/OpenClash/releases) 查看。
-
-## 依赖
-
-| 类别 | 依赖 |
-|------|------|
-| 基础 | luci、luci-base、luci-compat（Luci ≥ 19.07） |
-| 运行时 | bash、curl、ca-bundle、ruby、ruby-yaml |
-| 网络 | dnsmasq-full、ipset、ip-full、unzip |
-| 防火墙（iptables） | iptables、kmod-ipt-nat、iptables-mod-tproxy、iptables-mod-extra |
-| 防火墙（nftables） | kmod-nft-tproxy（Firewall4） |
-| 可选 | kmod-tun（TUN 模式）、ip6tables-mod-nat（IPv6）、kmod-inet-diag（PROCESS-NAME） |
-
-## 源码编译
-
-从 OpenWrt 的 [SDK](https://archive.openwrt.org/chaos_calmer/15.05.1/ar71xx/generic/OpenWrt-SDK-15.05.1-ar71xx-generic_gcc-4.8-linaro_uClibc-0.9.33.2.Linux-x86_64.tar.bz2) 编译：
-
-```bash
-# 解压下载好的 SDK
-curl -SLk --connect-timeout 30 --retry 2 "https://archive.openwrt.org/chaos_calmer/15.05.1/ar71xx/generic/OpenWrt-SDK-15.05.1-ar71xx-generic_gcc-4.8-linaro_uClibc-0.9.33.2.Linux-x86_64.tar.bz2" -o "/tmp/SDK.tar.bz2"
-cd /tmp
-tar xjf SDK.tar.bz2
-cd OpenWrt-SDK-15.05.1-*
-
-# Clone 项目
-mkdir package/luci-app-openclash
-cd package/luci-app-openclash
-git init
-git remote add -f origin https://github.com/vernesong/OpenClash.git
-git config core.sparsecheckout true
-echo "luci-app-openclash" >> .git/info/sparse-checkout
-git pull --depth 1 origin master
-git branch --set-upstream-to=origin/master master
-
-# 编译 po2lmo (如果有 po2lmo 可跳过)
-pushd luci-app-openclash/tools/po2lmo
-make && sudo make install
-popd
-
-# 编译最新 CodeMirror 6 (插件内置，可跳过)
-pushd luci-app-openclash/tools/codemirror
-npm install
-npx esbuild entry.js --bundle --format=iife --global-name=CM6 --minify --target=es2019 --outfile=../../root/www/luci-static/resources/openclash/js/cm6.min.js --legal-comments=none --loader:.css=text
-npx esbuild entry-md-render.js --bundle --format=iife --global-name=OCMarkdown --minify --target=es2019 --outfile=../../root/www/luci-static/resources/openclash/js/md-render.min.js --legal-comments=none --loader:.css=text
-npx esbuild entry-lint-worker.js --bundle --format=iife --minify --target=es2019 --outfile=../../root/www/luci-static/resources/openclash/js/lint-worker.min.js --legal-comments=none
-rm -rf node_modules
-popd
-
-# 开始编译
-
-# 先回退到 SDK 主目录
-cd ../..
-make package/luci-app-openclash/luci-app-openclash/compile V=99
-
-# IPK 文件位置
-./bin/ar71xx/packages/base/luci-app-openclash_*-beta_all.ipk
+```sh
+make defconfig
+make package/luci-app-openclash/compile V=s
 ```
 
-```bash
-# 同步源码
-cd package/luci-app-openclash/luci-app-openclash
-git pull
+构建产物位于 SDK 的 `bin/packages/` 下，具体路径和文件名取决于 SDK。现有构建步骤也可参考[构建工作流](.github/workflows/compile_new_ipk.yml)，但其中发布分支、版本读取与更新来源仍需按本项目规则适配，不能直接据此认定 SharpUI 发布已经就绪。
 
-# 您也可以直接拷贝 `luci-app-openclash` 文件夹至其他 `OpenWrt` 项目的 `Package` 目录下随固件编译
+## 开发与上游同步
 
-make menuconfig
-# 选择要编译的包 LuCI -> Applications -> luci-app-openclash
+Agent 和贡献者请先阅读仓库根目录的 [AGENTS.md](AGENTS.md)，其中包含 UI 改造边界、行为保持原则、验证要求、上游合并流程以及版本和发布约定。
 
-```
+同步时以明确的上游稳定标签与提交 SHA 为目标，在独立分支合并，逐项核对接口、配置和运行行为；保留 SharpUI 的界面与适配层，更新上游基线及同步说明。上游标签使用独立命名空间，本项目发布使用 `sharpui-v*`，不移动已有标签。
 
 ## 致谢
 
-OpenClash 的构建离不开以下开源项目与数据服务：
+首先感谢 [vernesong](https://github.com/vernesong) 和 [OpenClash](https://github.com/vernesong/OpenClash) 的所有贡献者。本项目的代理管理与运行能力来自上游，SharpUI 的工作聚焦于 UI 与使用体验。
+
+以下保留上游项目的致谢：
 
 | 类别 | 项目 | 作者 / 组织 | 说明 |
 |------|------|-------------|------|
 | 内核 | [Mihomo](https://github.com/MetaCubeX/mihomo) | [MetaCubeX](https://github.com/MetaCubeX) | 代理内核（Clash Meta） |
-| 代码基础 | [Luci For Clash](https://github.com/frainzy1477/luci-app-clash) | [frainzy1477](https://github.com/frainzy1477) | 本项目代码基于此 |
+| 代码基础 | [Luci For Clash](https://github.com/frainzy1477/luci-app-clash) | [frainzy1477](https://github.com/frainzy1477) | 上游 OpenClash 的代码基础 |
 | 控制面板 | [metacubexd](https://github.com/MetaCubeX/metacubexd) | [MetaCubeX](https://github.com/MetaCubeX) | 默认内置面板 |
 | 控制面板 | [zashboard](https://github.com/Zephyruso/zashboard) | [Zephyruso](https://github.com/Zephyruso) | 内置面板 |
 | 控制面板 | [Yacd-meta](https://github.com/MetaCubeX/Yacd-meta) | [MetaCubeX](https://github.com/MetaCubeX) | 内置面板，基于 [yacd](https://github.com/haishanh/yacd) |
@@ -197,7 +158,9 @@ OpenClash 的构建离不开以下开源项目与数据服务：
 | IP 检查 | [ip.skk.moe](https://ip.skk.moe/) | [SukkaW](https://ip.skk.moe/) | 公网 IP 检测 |
 | 编辑器 | [CodeMirror](https://codemirror.net/) | [Marijn Haverbeke](https://github.com/marijnh) | 内置编辑器 |
 
-## 请作者喝杯咖啡
+## 支持上游作者
+
+以下为上游 OpenClash 作者提供的支持方式，收款方为上游作者。
 
 * PayPal
 
@@ -213,4 +176,4 @@ OpenClash 的构建离不开以下开源项目与数据服务：
 
 ## 许可证
 
-本项目基于 [MIT License](LICENSE) 开源。
+本项目沿用上游的 [MIT License](LICENSE)，保留原作者版权声明。
